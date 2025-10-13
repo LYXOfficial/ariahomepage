@@ -190,17 +190,25 @@ const onPause = () => {
   saveState();
 };
 
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
 const updateProgress = () => {
   if (!audioRef.value) return;
   progress.value = audioRef.value.currentTime;
   duration.value = audioRef.value.duration || 0;
-  saveState();
+  
+  // 使用防抖保存状态，避免频繁写入 localStorage
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    saveState();
+  }, 1000); // 1秒后保存
 };
 
 const seek = (e: Event) => {
   const time = Number((e.target as HTMLInputElement).value);
   if (audioRef.value) {
     audioRef.value.currentTime = time;
+    // 拖动进度条后立即更新歌词
+    updateLyric();
   }
 };
 
@@ -358,6 +366,8 @@ onMounted(async () => {
     audioRef.value.onloadedmetadata = () => {
       if (audioRef.value && progress.value > 0) {
         audioRef.value.currentTime = progress.value;
+        // 恢复进度后立即更新歌词到对应位置
+        updateLyric();
       }
       if (isPlaying.value) {
         audioRef.value?.play().catch(() => {

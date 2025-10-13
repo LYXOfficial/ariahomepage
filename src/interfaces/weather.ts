@@ -40,20 +40,15 @@ export const wiMapping: Record<string, string> = {
 };
 
 export interface LocationRep {
-  status: string;
-  country: string;
-  countryCode: string;
-  region: string;
-  regionName: string;
-  city: string;
-  zip: string;
-  lat: number;
-  lon: number;
-  timezone: string;
-  isp: string;
-  org: string;
-  as: string;
-  query: string;
+  ip: string;
+  pro: string;      // 省份
+  city: string;     // 城市
+  addr: string;     // 详细地址
+  proCode: string;  // 省份代码
+  cityCode: string; // 城市代码
+  region: string;   // 区域
+  regionCode: string; // 区域代码
+  regionNames: string; // 区域名称
 }
 export interface City {
   city?: string;
