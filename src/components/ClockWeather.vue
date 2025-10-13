@@ -7,7 +7,7 @@ import type {
   Weather,
   CityCodeRep,
   WeatherRep,
-  LocationRep,
+  LocationData,
 } from "../interfaces/weather";
 import { Zhixiashi, Unloaded, wiMapping } from "../interfaces/weather";
 
@@ -100,38 +100,6 @@ function updateTimeDate() {
   date.value = `${y}-${m}-${d} ${w}`;
 }
 
-// JSONP 请求函数
-function fetchJsonp(url: string, callbackName: string): Promise<LocationRep> {
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    const timeout = setTimeout(() => {
-      cleanup();
-      reject(new Error('JSONP request timeout'));
-    }, 10000);
-
-    const cleanup = () => {
-      clearTimeout(timeout);
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-      delete (window as any)[callbackName];
-    };
-
-    (window as any)[callbackName] = (data: LocationRep) => {
-      cleanup();
-      resolve(data);
-    };
-
-    script.onerror = () => {
-      cleanup();
-      reject(new Error('JSONP request failed'));
-    };
-
-    script.src = url;
-    document.head.appendChild(script);
-  });
-}
-
 async function refreshWeather() {
   if (loading.value) return;
   loading.value = true;
@@ -140,34 +108,38 @@ async function refreshWeather() {
   weatherNow.value = Unloaded.Loading;
 
   try {
-    const callbackName = `jsonpCallback_${Date.now()}`;
-    const location = await fetchJsonp(
-      `https://whois.pconline.com.cn/ipJson.jsp?callback=${callbackName}`,
-      callbackName
-    );
+    const locationRep = await fetch("https://api.mir6.com/api/ip?type=json", {
+      method: "GET",
+      referrerPolicy: "no-referrer",
+    });
+    if (!locationRep.ok) throw new Error("位置请求失败");
+    const locationData: { code: number; msg: string; data: LocationData } = await locationRep.json();
     
-    // 转换 pconline 格式到旧格式
+    if (locationData.code !== 200 || !locationData.data) throw new Error("位置数据格式错误");
+    const location = locationData.data;
+    
+    // 转换 mir6 格式到旧格式
     const cityData: City = {
-      country: "中国",
-      province: location.pro || "",
+      country: location.country || "中国",
+      province: location.province || "",
       city: location.city || "",
       ip: location.ip || "",
-      isp: "", // pconline API 不返回 ISP 信息
+      isp: location.isp || "",
     };
     city.value = cityData; // 先赋值城市
     
     let cityCodeRep: Response;
     if (location.city) {
       cityCodeRep = await fetch(
-        `https://${config.HF_Host}/geo/v2/city/lookup/?location=${location.city}&adm=${location.pro}&lang=zh&key=${config.HF_Key}`
+        `https://${config.HF_Host}/geo/v2/city/lookup/?location=${location.city}&adm=${location.province}&lang=zh&key=${config.HF_Key}`
       );
-    } else if (location.pro) {
+    } else if (location.province) {
       cityCodeRep = await fetch(
-        `https://${config.HF_Host}/geo/v2/city/lookup/?location=${location.pro}&lang=zh&key=${config.HF_Key}`
+        `https://${config.HF_Host}/geo/v2/city/lookup/?location=${location.province}&lang=zh&key=${config.HF_Key}`
       );
     } else {
       cityCodeRep = await fetch(
-        `https://${config.HF_Host}/geo/v2/city/lookup/?location=中国&lang=zh&key=${config.HF_Key}`
+        `https://${config.HF_Host}/geo/v2/city/lookup/?location=${location.country || "中国"}&lang=zh&key=${config.HF_Key}`
       );
     }
     if (!cityCodeRep.ok) throw new Error("城市代码请求失败");
