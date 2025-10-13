@@ -108,7 +108,7 @@ async function refreshWeather() {
   weatherNow.value = Unloaded.Loading;
 
   try {
-    const locationRep = await fetch("http://ip-api.com/json?lang=zh-CN");
+    const locationRep = await fetch("https://ip-api.com/json?lang=zh-CN");
     if (!locationRep.ok) throw new Error("位置请求失败");
     const location: LocationRep = await locationRep.json();
     if (location.status !== "success") throw new Error("位置数据状态错误");
