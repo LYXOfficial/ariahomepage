@@ -17,6 +17,12 @@ const time = ref<string>("07:21");
 const date = ref<string>("1919-08-10");
 const loading = ref(false);
 
+// 去除地区后缀
+function removeSuffix(name?: string): string {
+  if (!name) return "";
+  return name.replace(/(市|县|区|省)$/, "");
+}
+
 function dayProgress() {
   const now = new Date();
   const start = new Date(now);
@@ -102,27 +108,33 @@ async function refreshWeather() {
   weatherNow.value = Unloaded.Loading;
 
   try {
-    const locationRep = await fetch("https://my.ip.cn/json/");
+    const locationRep = await fetch("http://ip-api.com/json?lang=zh-CN");
     if (!locationRep.ok) throw new Error("位置请求失败");
     const location: LocationRep = await locationRep.json();
-    if (!location.status) throw new Error("位置数据状态错误");
-    city.value = location.data; // 先赋值城市
+    if (location.status !== "success") throw new Error("位置数据状态错误");
+    
+    // 转换新API格式到旧格式
+    const cityData: City = {
+      country: location.country || "",
+      province: location.regionName || "",
+      city: location.city || "",
+      ip: location.query || "",
+      isp: location.isp || "",
+    };
+    city.value = cityData; // 先赋值城市
+    
     let cityCodeRep: Response;
-    if (location.data.district) {
+    if (location.city) {
       cityCodeRep = await fetch(
-        `https://${config.HF_Host}/geo/v2/city/lookup/?location=${location.data.district}&adm=${location.data.city}&lang=zh&key=${config.HF_Key}`
+        `https://${config.HF_Host}/geo/v2/city/lookup/?location=${location.city}&adm=${location.regionName}&lang=zh&key=${config.HF_Key}`
       );
-    } else if (location.data.province) {
+    } else if (location.regionName) {
       cityCodeRep = await fetch(
-        `https://${config.HF_Host}/geo/v2/city/lookup/?location=${location.data.province}&lang=zh&key=${config.HF_Key}`
-      );
-    } else if (location.data.city) {
-      cityCodeRep = await fetch(
-        `https://${config.HF_Host}/geo/v2/city/lookup/?location=${location.data.city}&lang=zh&key=${config.HF_Key}`
+        `https://${config.HF_Host}/geo/v2/city/lookup/?location=${location.regionName}&lang=zh&key=${config.HF_Key}`
       );
     } else {
       cityCodeRep = await fetch(
-        `https://${config.HF_Host}/geo/v2/city/lookup/?location=${location.data.country}&lang=zh&key=${config.HF_Key}`
+        `https://${config.HF_Host}/geo/v2/city/lookup/?location=${location.country}&lang=zh&key=${config.HF_Key}`
       );
     }
     if (!cityCodeRep.ok) throw new Error("城市代码请求失败");
@@ -229,15 +241,15 @@ onMounted(() => {
               class="city"
             >
               <span v-if="city.country !== '中国'">{{
-                city.country + " "
+                removeSuffix(city.country) + " "
               }}</span>
               <span
-                v-if="city.province && Zhixiashi.indexOf(city.province) == -1"
+                v-if="city.province && Zhixiashi.indexOf(removeSuffix(city.province)) == -1"
               >
-                {{ city.province + " " }}
+                {{ removeSuffix(city.province) + " " }}
               </span>
-              <span v-if="city.city">{{ city.city + " " }}</span>
-              <span v-if="city.district">{{ city.district }}</span>
+              <span v-if="city.city">{{ removeSuffix(city.city) + " " }}</span>
+              <span v-if="city.district">{{ removeSuffix(city.district) }}</span>
             </div>
             <div v-else-if="city === Unloaded.Loading" class="city">
               获取中...

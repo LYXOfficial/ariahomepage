@@ -137,7 +137,7 @@ const togglePlayer = () => {
   isOpen.value = !isOpen.value;
 };
 
-const playCurrent = () => {
+const playCurrent = (autoPlay = true, resetProgress = true) => {
   if (!playlist.value.length || !audioRef.value) return;
 
   currentIndex.value = playlist.value.findIndex(
@@ -148,9 +148,13 @@ const playCurrent = () => {
     currentUrl.value = playlist.value[0]?.url || null;
   }
   audioRef.value.src = playlist.value[currentIndex.value].url;
-  audioRef.value.currentTime = 0;
-  progress.value = 0;
-  audioRef.value.play();
+  if (resetProgress) {
+    audioRef.value.currentTime = 0;
+    progress.value = 0;
+  }
+  if (autoPlay) {
+    audioRef.value.play();
+  }
   const song = playlist.value[currentIndex.value];
   if ("mediaSession" in navigator) {
     navigator.mediaSession.metadata = new MediaMetadata({
@@ -277,6 +281,7 @@ const loadState = () => {
   if (savedProgress) progress.value = +savedProgress;
 
   const savedPlaying = localStorage.getItem("player-isPlaying");
+  // 只有明确保存过"true"状态时才自动播放，否则默认不播放
   isPlaying.value = savedPlaying === "true";
 
   const savedVolume = localStorage.getItem("player-volume");
@@ -339,7 +344,7 @@ onMounted(async () => {
     audioRef.value.volume = volume.value;
   }
 
-  playCurrent();
+  playCurrent(false, false);
 
   if (audioRef.value) {
     audioRef.value.currentTime = progress.value;
@@ -349,9 +354,11 @@ onMounted(async () => {
   }
   if (audioRef.value) {
     audioRef.value.volume = volume.value;
-    audioRef.value.currentTime = progress.value;
 
     audioRef.value.onloadedmetadata = () => {
+      if (audioRef.value && progress.value > 0) {
+        audioRef.value.currentTime = progress.value;
+      }
       if (isPlaying.value) {
         audioRef.value?.play().catch(() => {
           isPlaying.value = false;
