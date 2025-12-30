@@ -11,10 +11,10 @@ import Player from "./components/Player.vue";
 //@ts-ignore
 import Cursor from "./thirdparty/cursor.js";
 onMounted(() => {
-  if (!(/Mobi|Android|iPhone/i.test(navigator.userAgent))) {
+  if (!/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
     new Cursor();
   }
-})
+});
 </script>
 
 <template>
@@ -22,14 +22,14 @@ onMounted(() => {
     {{ config.title }}
   </title>
   <ThemeSwitcher />
-  <Player/>
+  <Player />
   <div class="cards-container">
     <PersonalCard />
     <ClockWeather />
     <Links />
     <Hitokoto />
   </div>
-  <Footer/>
+  <Footer />
 </template>
 
 <style scoped>

@@ -9,6 +9,7 @@ const { theme } = storeToRefs(themeStore);
 
 const bgA = ref<string>(""); // 第一层背景
 const bgB = ref<string>(""); // 第二层背景
+const tachieId = ref<string>(config.tachies[Math.floor(Math.random() * config.tachies.length)]);
 const fadeOpacityA = ref<number>(1); // 第一层透明度
 const fadeOpacityB = ref<number>(0); // 第二层透明度
 const currentIdx = ref<number>(-1);
@@ -110,6 +111,7 @@ defineExpose({
       :style="{ backgroundImage: `url(${bgB})`, opacity: fadeOpacityB }"
     ></div>
     <div class="bg-overlay"></div>
+    <img class="tachie" :src="tachieId"></img>
   </div>
 </template>
 
@@ -151,5 +153,20 @@ defineExpose({
 }
 [theme="light"] .bg-overlay {
   background: rgba(255, 255, 255, 0.4);
+}
+.tachie { 
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  height: 40vh;
+  opacity: .4;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+}
+@media (max-width: 768px) {
+  .tachie {
+    display: none;
+  }
 }
 </style>
