@@ -39,7 +39,7 @@ const circumference = 2 * Math.PI * radius;
 const trackRefs = ref<HTMLElement[]>([]);
 
 const playlistId = config.playlistIdWyy;
-const metingApi = `https://meting.qjqq.cn/?type=playlist&id=${playlistId}`;
+const metingApi = `https://api.qijieya.cn/meting/?type=playlist&id=${playlistId}`;
 
 const progressPercent = computed(() => {
   if (!duration.value || !isFinite(duration.value) || duration.value === 0)
@@ -679,6 +679,7 @@ window.addEventListener("resize", updateMarqueeStatus);
 }
 .player-pic img {
   width: 100%;
+  max-width: 96px;
   border-radius: 50%;
   border: 1px solid #fffa;
   animation-name: spin;
