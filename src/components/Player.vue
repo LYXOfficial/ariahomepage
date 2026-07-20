@@ -1160,8 +1160,10 @@ window.addEventListener("resize", updateMarqueeStatus);
   height: 48px;
   left: 10px;
   top: 10px;
-  max-width: min(350px, calc(100% - 20px));
+  max-width: min(600px, calc(100% - 20px));
   position: fixed;
+  pointer-events: none;
+  user-select: none;
   /* position: relative; */
 }
 
