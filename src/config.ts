@@ -11,12 +11,12 @@ export const config: Config = {
     },
     {
       name: "MoeRT",
-      url: "https://gg.ariaqwq.icu",
+      url: "https://guidegen.0v0.my",
       icon: "fa7-solid:subway",
     },
     {
       name: "Status",
-      url: "https://life.ariaqwq.icu",
+      url: "https://life.yaria.top",
       icon: "fa:align-left",
     },
   ],
